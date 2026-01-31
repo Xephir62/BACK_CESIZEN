@@ -1,0 +1,14 @@
+framework:
+    secret: '%env(APP_SECRET)%'
+
+    # Nécessaire pour Swagger UI (API Platform 3)
+    assets: ~
+
+    # Note that the session will be started ONLY if you read or write from it.
+    session: true
+
+when@test:
+    framework:
+        test: true
+        session:
+            storage_factory_id: session.storage.factory.mock_file

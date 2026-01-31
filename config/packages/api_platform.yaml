@@ -1,0 +1,23 @@
+api_platform:
+    title: Hello API Platform
+    version: 1.0.0
+
+    defaults:
+        stateless: true
+        cache_headers:
+            vary: ["Content-Type", "Authorization", "Origin"]
+
+    formats:
+        jsonld: ["application/ld+json"]
+        json: ["application/json"]
+
+    docs_formats:
+        html: ["text/html"]
+        jsonopenapi: ["application/vnd.openapi+json"]
+        jsonld: ["application/ld+json"]
+
+    swagger:
+        versions: [3]
+        api_keys: []
+
+    enable_swagger_ui: true
