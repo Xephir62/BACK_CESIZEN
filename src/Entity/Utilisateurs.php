@@ -64,6 +64,10 @@ class Utilisateurs implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['utilisateurs:read', 'utilisateurs:write'])]
     private ?string $photoProfil = null;
 
+    #[ORM\Column(nullable: true)]
+    #[Groups(['utilisateurs:read', 'utilisateurs:write'])]
+    private ?int $age = null;
+
     #[ORM\Column]
     #[Groups(['utilisateurs:read', 'utilisateurs:write'])]
     private ?bool $statusCompte = null;
@@ -84,6 +88,15 @@ class Utilisateurs implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: RenitialisationMdp::class, mappedBy: 'utilisateur')]
     #[Groups(['utilisateurs:read'])]
     private Collection $renitialisationMdps;
+
+    #[ORM\ManyToOne(inversedBy: 'utilisateurs')]
+    #[ORM\JoinColumn(nullable: true)]
+    #[Groups(['utilisateurs:read', 'utilisateurs:write'])]
+    private ?Exercice $exercice = null;
+
+    #[ORM\OneToMany(targetEntity: Commentaire::class, mappedBy: 'utilisateur', orphanRemoval: true)]
+    #[Groups(['utilisateurs:read'])]
+    private Collection $commentaires;
 
     // TODO: Uncomment when these entities are created
     // #[ORM\OneToMany(targetEntity: Consultation::class, mappedBy: 'utilisateur')]
@@ -117,6 +130,7 @@ class Utilisateurs implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $this->refreshTokens = new ArrayCollection();
         $this->renitialisationMdps = new ArrayCollection();
+        $this->commentaires = new ArrayCollection();
         // TODO: Uncomment when entities are created
         // $this->consultations = new ArrayCollection();
         // $this->ressources = new ArrayCollection();
@@ -215,6 +229,18 @@ class Utilisateurs implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    public function getAge(): ?int
+    {
+        return $this->age;
+    }
+
+    public function setAge(?int $age): static
+    {
+        $this->age = $age;
+
+        return $this;
+    }
+
     public function isStatusCompte(): ?bool
     {
         return $this->statusCompte;
@@ -305,6 +331,48 @@ class Utilisateurs implements UserInterface, PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($renitialisationMdp->getUtilisateur() === $this) {
                 $renitialisationMdp->setUtilisateur(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getExercice(): ?Exercice
+    {
+        return $this->exercice;
+    }
+
+    public function setExercice(?Exercice $exercice): static
+    {
+        $this->exercice = $exercice;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Commentaire>
+     */
+    public function getCommentaires(): Collection
+    {
+        return $this->commentaires;
+    }
+
+    public function addCommentaire(Commentaire $commentaire): static
+    {
+        if (!$this->commentaires->contains($commentaire)) {
+            $this->commentaires->add($commentaire);
+            $commentaire->setUtilisateur($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCommentaire(Commentaire $commentaire): static
+    {
+        if ($this->commentaires->removeElement($commentaire)) {
+            // set the owning side to null (unless already changed)
+            if ($commentaire->getUtilisateur() === $this) {
+                $commentaire->setUtilisateur(null);
             }
         }
 

@@ -27,3 +27,7 @@ services:
             $persistProcessor: "@api_platform.doctrine.orm.state.persist_processor"
             $passwordHasher: "@security.user_password_hasher"
             $rolesRepo: '@App\Repository\RolesUtilisateursRepository'
+
+    App\State\CommentaireProcessor:
+        arguments:
+            $persistProcessor: "@api_platform.doctrine.orm.state.persist_processor"
