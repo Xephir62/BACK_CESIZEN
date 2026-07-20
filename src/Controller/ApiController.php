@@ -10,6 +10,6 @@ final class ApiController
     #[Route('/api', name: 'api_root', methods: ['GET'])]
     public function root(): RedirectResponse
     {
-        return new RedirectResponse('/api/docs');
+        return new RedirectResponse('/api/docs.html');
     }
 }

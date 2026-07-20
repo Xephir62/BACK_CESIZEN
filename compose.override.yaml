@@ -1,7 +1,14 @@
 
 services:
+  app:
+    environment:
+      APP_ENV: dev
+    volumes:
+      - ./:/var/www/html:cached
+      - /var/www/html/var
+
 ###> doctrine/doctrine-bundle ###
   database:
     ports:
-      - "5432"
+      - "3306"
 ###< doctrine/doctrine-bundle ###
