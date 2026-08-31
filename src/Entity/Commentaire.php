@@ -19,8 +19,8 @@ use Symfony\Component\Serializer\Annotation\Groups;
         new Get(),
         new GetCollection(),
         new Post(processor: \App\State\CommentaireProcessor::class),
-        new Put(),
-        new Delete(),
+        new Put(security: "object.getUtilisateur() == user or is_granted('ROLE_ADMIN')"),
+        new Delete(security: "object.getUtilisateur() == user or is_granted('ROLE_ADMIN')"),
     ],
     normalizationContext: ['groups' => ['commentaire:read']],
     denormalizationContext: ['groups' => ['commentaire:write']]
