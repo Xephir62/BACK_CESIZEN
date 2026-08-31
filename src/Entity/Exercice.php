@@ -39,9 +39,6 @@ class Exercice
     #[Groups(['exercice:read', 'exercice:write', 'utilisateurs:read', 'commentaire:read'])]
     private ?string $titre = null;
 
-    #[Groups(['exercice:read', 'exercice:write'])]
-    private ?string $title = null;
-
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     #[Groups(['exercice:read', 'exercice:write', 'utilisateurs:read'])]
     private ?string $description = null;
@@ -94,20 +91,6 @@ class Exercice
     public function setTitre(string $titre): static
     {
         $this->titre = $titre;
-        $this->title = $titre;
-
-        return $this;
-    }
-
-    public function getTitle(): ?string
-    {
-        return $this->titre;
-    }
-
-    public function setTitle(string $title): static
-    {
-        $this->title = $title;
-        $this->titre = $title;
 
         return $this;
     }

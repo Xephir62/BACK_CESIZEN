@@ -37,9 +37,6 @@ class Ressource
     #[Groups(['ressource:read', 'ressource:write'])]
     private ?string $titre = null;
 
-    #[Groups(['ressource:read', 'ressource:write'])]
-    private ?string $title = null;
-
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     #[Groups(['ressource:read', 'ressource:write'])]
     private ?string $description = null;
@@ -70,20 +67,6 @@ class Ressource
     public function setTitre(string $titre): static
     {
         $this->titre = $titre;
-        $this->title = $titre;
-
-        return $this;
-    }
-
-    public function getTitle(): ?string
-    {
-        return $this->titre;
-    }
-
-    public function setTitle(string $title): static
-    {
-        $this->title = $title;
-        $this->titre = $title;
 
         return $this;
     }
