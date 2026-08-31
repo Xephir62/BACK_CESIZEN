@@ -8,19 +8,19 @@ services:
       database:
         condition: service_healthy
     environment:
-      DATABASE_URL: "mysql://${MYSQL_USER:-app}:${MYSQL_PASSWORD:-!ChangeMe!}@database:3306/${MYSQL_DATABASE:-projetcesizen}?serverVersion=8.0&charset=utf8mb4"
+      DATABASE_URL: "mysql://${MYSQL_USER}@database:3306/${MYSQL_DATABASE}?serverVersion=8.0&charset=utf8mb4"
+      APP_ENV: prod
     ports:
-      - "8000:80"
+      - "8080:80"
 
 ###> doctrine/doctrine-bundle ###
   database:
     image: mysql:${MYSQL_VERSION:-8.0}
     environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-projetcesizen}
-      # You should definitely change the password in production
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-!ChangeMe!}
-      MYSQL_USER: ${MYSQL_USER:-app}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-!ChangeMe!}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 5s
@@ -28,8 +28,7 @@ services:
       start_period: 30s
     volumes:
       - database_data:/var/lib/mysql:rw
-      # You may use a bind-mounted host directory instead, so that it is harder to accidentally remove the volume and lose all your data!
-      # - ./docker/db/data:/var/lib/mysql:rw
+    profiles: ["dev"]
 ###< doctrine/doctrine-bundle ###
 
 volumes:

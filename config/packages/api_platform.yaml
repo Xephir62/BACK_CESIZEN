@@ -20,4 +20,4 @@ api_platform:
         versions: [3]
         api_keys: []
 
-    enable_swagger_ui: true
+    enable_swagger_ui: "%kernel.debug%"
