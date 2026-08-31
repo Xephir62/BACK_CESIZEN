@@ -52,11 +52,9 @@ class UserPasswordProcessor implements ProcessorInterface
                 $data->setStatusCompte(true);
             }
 
-            if ($data->getRole() === null) {
-                $roleUser = $this->rolesRepo->findOneBy(['libelle' => 'ROLE_USER']);
-                if ($roleUser) {
-                    $data->setRole($roleUser);
-                }
+            $roleUser = $this->rolesRepo->findOneBy(['libelle' => 'ROLE_USER']);
+            if ($roleUser) {
+                $data->setRole($roleUser);
             }
         }
 

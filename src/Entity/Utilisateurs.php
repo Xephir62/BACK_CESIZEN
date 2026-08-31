@@ -89,7 +89,7 @@ class Utilisateurs implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\ManyToOne(inversedBy: 'utilisateurs')]
     #[ORM\JoinColumn(nullable: false)]
-    #[Groups(['utilisateurs:read', 'utilisateurs:write'])]
+    #[Groups(['utilisateurs:read'])]
     private ?RolesUtilisateurs $role = null;
 
     #[ORM\OneToMany(targetEntity: RefreshToken::class, mappedBy: 'utilisateur')]
