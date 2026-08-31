@@ -24,11 +24,11 @@ use Doctrine\ORM\Mapping as ORM;
 #[UniqueEntity(fields: ['pseudo'], message: 'Ce pseudo est déjà utilisé.')]
 #[ApiResource(
     operations: [
-        new Get(),
-        new GetCollection(),
+        new Get(security: "is_granted('ROLE_ADMIN') or object == user"),
+        new GetCollection(security: "is_granted('ROLE_ADMIN')"),
         new Post(processor: UserPasswordProcessor::class),
-        new Put(processor: UserPasswordProcessor::class),
-        new Delete(),
+        new Put(processor: UserPasswordProcessor::class, security: "is_granted('ROLE_ADMIN') or object == user"),
+        new Delete(security: "is_granted('ROLE_ADMIN') or object == user"),
     ],
     normalizationContext: ['groups' => ['utilisateurs:read']],
     denormalizationContext: ['groups' => ['utilisateurs:write']]
