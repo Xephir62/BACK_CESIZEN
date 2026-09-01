@@ -27,7 +27,7 @@ class CorsSubscriber implements EventSubscriberInterface
 
         $request = $event->getRequest();
 
-        if (!$this->isApiRequest($request) || $request->getMethod() !== Request::METHOD_OPTIONS) {
+        if (!$this->isApiRequest($request) || Request::METHOD_OPTIONS !== $request->getMethod()) {
             return;
         }
 
@@ -60,7 +60,7 @@ class CorsSubscriber implements EventSubscriberInterface
     {
         $origin = $request->headers->get('Origin');
 
-        if ($origin === null || !$this->isAllowedOrigin($origin)) {
+        if (null === $origin || !$this->isAllowedOrigin($origin)) {
             return;
         }
 

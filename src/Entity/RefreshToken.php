@@ -2,8 +2,8 @@
 
 namespace App\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
 use App\Repository\RefreshTokenRepository;
+use Doctrine\ORM\Mapping as ORM;
 use Gesdinet\JWTRefreshTokenBundle\Model\RefreshTokenInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
@@ -31,7 +31,7 @@ class RefreshToken implements RefreshTokenInterface
     public static function createForUserWithTtl(string $refreshToken, UserInterface $user, int $ttl): RefreshTokenInterface
     {
         $valid = new \DateTime();
-        $valid->modify('+' . $ttl . ' seconds');
+        $valid->modify('+'.$ttl.' seconds');
 
         $entity = new self();
         $entity->setRefreshToken($refreshToken);
@@ -54,6 +54,7 @@ class RefreshToken implements RefreshTokenInterface
     public function setRefreshToken($refreshToken = null): RefreshTokenInterface
     {
         $this->refreshToken = $refreshToken;
+
         return $this;
     }
 
@@ -65,6 +66,7 @@ class RefreshToken implements RefreshTokenInterface
     public function setValid($valid = null): RefreshTokenInterface
     {
         $this->valid = $valid instanceof \DateTime ? \DateTimeImmutable::createFromMutable($valid) : $valid;
+
         return $this;
     }
 
@@ -76,6 +78,7 @@ class RefreshToken implements RefreshTokenInterface
     public function setUsername($username = null): RefreshTokenInterface
     {
         $this->username = $username;
+
         return $this;
     }
 
@@ -87,12 +90,14 @@ class RefreshToken implements RefreshTokenInterface
     public function setUtilisateur(?Utilisateurs $utilisateur): self
     {
         $this->utilisateur = $utilisateur;
+
         return $this;
     }
 
     public function isValid(): bool
     {
         $datetime = new \DateTimeImmutable();
+
         return $this->valid >= $datetime;
     }
 

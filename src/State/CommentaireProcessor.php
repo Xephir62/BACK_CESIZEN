@@ -14,7 +14,8 @@ class CommentaireProcessor implements ProcessorInterface
     public function __construct(
         private ProcessorInterface $persistProcessor,
         private Security $security,
-    ) {}
+    ) {
+    }
 
     public function process($data, Operation $operation, array $uriVariables = [], array $context = [])
     {
@@ -26,7 +27,7 @@ class CommentaireProcessor implements ProcessorInterface
             }
 
             $exercice = $user->getExercice();
-            if ($exercice === null) {
+            if (null === $exercice) {
                 throw new BadRequestHttpException('Aucun exercice n est affecte a cet utilisateur.');
             }
 
@@ -34,22 +35,22 @@ class CommentaireProcessor implements ProcessorInterface
             $ageMin = $exercice->getAgeMin();
             $ageMax = $exercice->getAgeMax();
 
-            if ($age === null) {
+            if (null === $age) {
                 throw new BadRequestHttpException('L age de l utilisateur est obligatoire.');
             }
 
-            if ($ageMin !== null && $age < $ageMin) {
+            if (null !== $ageMin && $age < $ageMin) {
                 throw new BadRequestHttpException('Cet exercice n est pas disponible pour cet age.');
             }
 
-            if ($ageMax !== null && $age > $ageMax) {
+            if (null !== $ageMax && $age > $ageMax) {
                 throw new BadRequestHttpException('Cet exercice n est pas disponible pour cet age.');
             }
 
             $data->setUtilisateur($user);
             $data->setExercice($exercice);
 
-            if (trim((string) $data->getContenu()) === '') {
+            if ('' === trim((string) $data->getContenu())) {
                 throw new BadRequestHttpException('Le commentaire est obligatoire pour lancer lexercice.');
             }
         }
