@@ -33,18 +33,18 @@ class RessourceAdminController extends AbstractController
         $ressource->setDescription($description);
 
         if ($file) {
-            $uploadsDir = $this->getParameter('kernel.project_dir') . '/public/uploads/ressources';
+            $uploadsDir = $this->getParameter('kernel.project_dir').'/public/uploads/ressources';
             if (!is_dir($uploadsDir)) {
                 mkdir($uploadsDir, 0755, true);
             }
 
             $originalFilename = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
             $safeFilename = $slugger->slug($originalFilename);
-            $newFilename = $safeFilename . '-' . uniqid() . '.' . $file->guessExtension();
+            $newFilename = $safeFilename.'-'.uniqid().'.'.$file->guessExtension();
 
             try {
                 $file->move($uploadsDir, $newFilename);
-                $ressource->setImage('/uploads/ressources/' . $newFilename);
+                $ressource->setImage('/uploads/ressources/'.$newFilename);
             } catch (\Exception $e) {
                 return new JsonResponse(['message' => 'Erreur lors de l\'upload de l\'image.'], Response::HTTP_INTERNAL_SERVER_ERROR);
             }
