@@ -1,0 +1,102 @@
+name: Convention de commits
+
+# À placer dans .github/workflows/commit-lint.yml
+#
+# Vérifie deux choses sur chaque pull request :
+#   1. le titre de la PR (c'est lui qui devient le message final en squash merge)
+#   2. chaque message de commit de la branche
+#
+# Aucune dépendance externe : uniquement grep, pour ne rien ajouter à un projet PHP.
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  titre-de-pr:
+    name: Titre de la pull request
+    runs-on: ubuntu-latest
+    steps:
+      - name: Vérifier le format du titre
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          PATTERN='^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-z0-9._/-]+\))?!?: .+$'
+
+          if ! printf '%s' "$PR_TITLE" | grep -Eq "$PATTERN"; then
+            echo "::error::Le titre de la PR ne respecte pas Conventional Commits."
+            echo ""
+            echo "Reçu   : $PR_TITLE"
+            echo "Attendu: <type>(<portée>): <description>"
+            echo ""
+            echo "Types  : feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert"
+            echo "Exemple: feat(auth): ajouter la rotation du refresh token"
+            exit 1
+          fi
+
+          LENGTH=$(printf '%s' "$PR_TITLE" | wc -c)
+          if [ "$LENGTH" -gt 72 ]; then
+            echo "::error::Titre trop long : $LENGTH caractères (maximum 72)."
+            exit 1
+          fi
+
+          echo "Titre conforme : $PR_TITLE"
+
+  messages-de-commit:
+    name: Messages de commit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer l'historique
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Vérifier chaque commit de la branche
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          PATTERN='^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-z0-9._/-]+\))?!?: .+$'
+          ECHECS=0
+
+          # --no-merges : les commits de fusion ne suivent pas la convention.
+          COMMITS=$(git rev-list --no-merges "$BASE_SHA".."$HEAD_SHA")
+
+          if [ -z "$COMMITS" ]; then
+            echo "Aucun commit à vérifier."
+            exit 0
+          fi
+
+          for SHA in $COMMITS; do
+            SUJET=$(git log -1 --format=%s "$SHA")
+            COURT=$(git rev-parse --short "$SHA")
+
+            if printf '%s' "$SUJET" | grep -Eq "$PATTERN"; then
+              echo "  OK   $COURT  $SUJET"
+            else
+              echo "::error::$COURT  $SUJET"
+              ECHECS=$((ECHECS + 1))
+            fi
+          done
+
+          if [ "$ECHECS" -gt 0 ]; then
+            echo ""
+            echo "$ECHECS commit(s) non conforme(s)."
+            echo ""
+            echo "Pour corriger le dernier commit :"
+            echo "  git commit --amend -m \"feat(portée): description\""
+            echo "  git push --force-with-lease"
+            echo ""
+            echo "Pour corriger plusieurs commits :"
+            echo "  git rebase -i origin/develop   puis 'reword' sur les lignes concernées"
+            echo "  git push --force-with-lease"
+            exit 1
+          fi
+
+          echo ""
+          echo "Tous les commits respectent la convention."

@@ -4,7 +4,6 @@ namespace App\EventSubscriber;
 
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
@@ -31,7 +30,7 @@ class SecurityHeadersSubscriber implements EventSubscriberInterface
         }
 
         $origin = $request->headers->get('Origin');
-        if ($origin !== null && $this->isAllowedOrigin($origin)) {
+        if (null !== $origin && $this->isAllowedOrigin($origin)) {
             $response->headers->set('Access-Control-Allow-Origin', $origin);
             $response->headers->set('Access-Control-Allow-Credentials', 'true');
             $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');

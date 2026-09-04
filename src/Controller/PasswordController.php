@@ -32,7 +32,7 @@ class PasswordController extends AbstractController
         }
 
         $user = $utilisateursRepository->findOneBy(['email' => $email]);
-        if ($user !== null) {
+        if (null !== $user) {
             $token = $this->createResetToken($user, $entityManager, $mailer);
             $this->sendResetEmail($user, $token, $mailer);
         }
@@ -54,12 +54,12 @@ class PasswordController extends AbstractController
         $token = trim((string) ($payload['token'] ?? ''));
         $newPassword = (string) ($payload['password'] ?? '');
 
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $token === '' || strlen($newPassword) < 8) {
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL) || '' === $token || strlen($newPassword) < 8) {
             return new JsonResponse(['message' => 'Les données de réinitialisation sont invalides.'], Response::HTTP_BAD_REQUEST);
         }
 
         $user = $utilisateursRepository->findOneBy(['email' => $email]);
-        if ($user === null) {
+        if (null === $user) {
             return new JsonResponse(['message' => 'Le lien de réinitialisation est invalide ou expiré.'], Response::HTTP_BAD_REQUEST);
         }
 
@@ -78,7 +78,7 @@ class PasswordController extends AbstractController
             ->getQuery()
             ->getOneOrNullResult();
 
-        if ($resetRequest === null) {
+        if (null === $resetRequest) {
             return new JsonResponse(['message' => 'Le lien de réinitialisation est invalide ou expiré.'], Response::HTTP_BAD_REQUEST);
         }
 
@@ -99,7 +99,7 @@ class PasswordController extends AbstractController
         ]);
 
         foreach ($existingRequests as $request) {
-            if ($request->getDateExpiration() === null || $request->getDateExpiration() > new \DateTimeImmutable()) {
+            if (null === $request->getDateExpiration() || $request->getDateExpiration() > new \DateTimeImmutable()) {
                 $request->setDateUtilisation(new \DateTimeImmutable());
             }
         }
@@ -125,8 +125,8 @@ class PasswordController extends AbstractController
             ->subject('Réinitialisation de votre mot de passe')
             ->html(sprintf(
                 '<p>Vous avez demandé une réinitialisation de votre mot de passe.</p>'
-                    . '<p>Voici votre jeton de sécurité : <strong>%s</strong></p>'
-                    . '<p>Utilisez ce jeton dans le flux /api/password/reset.</p>',
+                    .'<p>Voici votre jeton de sécurité : <strong>%s</strong></p>'
+                    .'<p>Utilisez ce jeton dans le flux /api/password/reset.</p>',
                 htmlspecialchars($token, ENT_QUOTES, 'UTF-8')
             ));
 

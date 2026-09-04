@@ -14,14 +14,15 @@ class UserPasswordProcessor implements ProcessorInterface
     public function __construct(
         private ProcessorInterface $persistProcessor,
         private UserPasswordHasherInterface $passwordHasher,
-        private RolesUtilisateursRepository $rolesRepo
-    ) {}
+        private RolesUtilisateursRepository $rolesRepo,
+    ) {
+    }
 
     public function process($data, Operation $operation, array $uriVariables = [], array $context = [])
     {
         if ($data instanceof Utilisateurs) {
-            if ($data->getExercice() !== null) {
-                if ($data->getAge() === null) {
+            if (null !== $data->getExercice()) {
+                if (null === $data->getAge()) {
                     throw new BadRequestHttpException('L age de l utilisateur est obligatoire pour affecter un exercice.');
                 }
 
@@ -29,11 +30,11 @@ class UserPasswordProcessor implements ProcessorInterface
                 $ageMin = $data->getExercice()->getAgeMin();
                 $ageMax = $data->getExercice()->getAgeMax();
 
-                if ($ageMin !== null && $age < $ageMin) {
+                if (null !== $ageMin && $age < $ageMin) {
                     throw new BadRequestHttpException('Cet exercice n est pas disponible pour cet age.');
                 }
 
-                if ($ageMax !== null && $age > $ageMax) {
+                if (null !== $ageMax && $age > $ageMax) {
                     throw new BadRequestHttpException('Cet exercice n est pas disponible pour cet age.');
                 }
             }
@@ -44,11 +45,11 @@ class UserPasswordProcessor implements ProcessorInterface
                 $data->eraseCredentials();
             }
 
-            if ($data->getDateCreation() === null) {
+            if (null === $data->getDateCreation()) {
                 $data->setDateCreation(new \DateTimeImmutable());
             }
 
-            if ($data->isStatusCompte() === null) {
+            if (null === $data->isStatusCompte()) {
                 $data->setStatusCompte(true);
             }
 
