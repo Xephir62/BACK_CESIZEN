@@ -1,0 +1,89 @@
+# À placer dans .github/dependabot.yml
+#
+# Dependabot surveille les dépendances déclarées et ouvre automatiquement une
+# pull request lorsqu'une mise à jour est disponible. Chaque PR passe par la CI
+# comme n'importe quelle autre, ce qui garantit qu'une montée de version ne
+# casse rien avant d'être fusionnée.
+#
+# Les alertes de sécurité sont indépendantes de ce fichier : elles s'activent
+# dans Settings > Advanced Security > Dependabot alerts, et ouvrent des PR
+# immédiatement à la publication d'une CVE, sans attendre la fréquence définie ici.
+
+version: 2
+
+updates:
+  # ---------------------------------------------------------------------------
+  # Dépendances PHP
+  - package-ecosystem: "composer"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:00"
+      timezone: "Europe/Paris"
+    target-branch: "develop"
+    open-pull-requests-limit: 5
+    labels:
+      - "dépendances"
+      - "type/évolution"
+    commit-message:
+      prefix: "chore(deps)"
+      prefix-development: "chore(deps-dev)"
+      include: "scope"
+    groups:
+      # Les composants Symfony montent ensemble : les mettre à jour un par un
+      # produit des PR qui se cassent mutuellement.
+      symfony:
+        patterns:
+          - "symfony/*"
+      doctrine:
+        patterns:
+          - "doctrine/*"
+      # Les outils de développement sont regroupés : leur mise à jour ne
+      # présente aucun risque pour le code livré.
+      outils-dev:
+        dependency-type: "development"
+        patterns:
+          - "*"
+    ignore:
+      # Les montées de version majeures sont traitées manuellement : elles
+      # impliquent presque toujours des changements de code.
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # ---------------------------------------------------------------------------
+  # Image de base Docker
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:00"
+      timezone: "Europe/Paris"
+    target-branch: "develop"
+    open-pull-requests-limit: 3
+    labels:
+      - "dépendances"
+      - "docker"
+    commit-message:
+      prefix: "build(docker)"
+
+  # ---------------------------------------------------------------------------
+  # Actions utilisées dans les workflows
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+      time: "07:00"
+      timezone: "Europe/Paris"
+    target-branch: "develop"
+    open-pull-requests-limit: 3
+    labels:
+      - "dépendances"
+      - "ci"
+    commit-message:
+      prefix: "ci(deps)"
+    groups:
+      actions:
+        patterns:
+          - "*"
