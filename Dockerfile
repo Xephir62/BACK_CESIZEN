@@ -4,6 +4,7 @@ FROM php:8.3.10-apache
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     unzip \
+    curl \
     libicu-dev \
     libzip-dev \
     libonig-dev \
@@ -39,7 +40,7 @@ USER www-data
 
 EXPOSE 80
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-    CMD curl -f http://localhost/ || exit 1
+    CMD curl -fsS http://localhost/ || exit 1
 
 # Commands for managing the Docker containers
 # docker compose up -d          # démarrer
