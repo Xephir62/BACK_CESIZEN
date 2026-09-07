@@ -1,0 +1,191 @@
+name: CI
+
+# À placer dans .github/workflows/ci.yml
+#
+# Trois jobs indépendants qui tournent en parallèle :
+#   qualite  — validation, lint syntaxique, style, analyse statique, audit de sécurité
+#   tests    — migrations Doctrine sur une vraie base MySQL, puis PHPUnit
+#   docker   — vérification que l'image de production se construit toujours
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PHP_VERSION: '8.3'
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  qualite:
+    name: Qualité du code
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: mbstring, intl, pdo_mysql, zip, ctype, iconv
+          coverage: none
+          tools: composer:v2
+          ini-values: memory_limit=1G
+
+      - name: Valider composer.json et composer.lock
+        run: composer validate --strict
+
+      - name: Mettre en cache les dépendances
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ env.PHP_VERSION }}-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-${{ env.PHP_VERSION }}-
+
+      - name: Installer les dépendances
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Lint syntaxique de src/
+        run: |
+          ERREURS=0
+          for FICHIER in $(find src -type f -name "*.php"); do
+            if ! php -l "$FICHIER" > /dev/null 2>&1; then
+              echo "::error file=$FICHIER::Erreur de syntaxe"
+              php -l "$FICHIER"
+              ERREURS=$((ERREURS + 1))
+            fi
+          done
+          if [ "$ERREURS" -gt 0 ]; then
+            echo "$ERREURS fichier(s) en erreur."
+            exit 1
+          fi
+          echo "Syntaxe valide sur l'ensemble de src/."
+
+      - name: Vérifier le style de code
+        run: vendor/bin/php-cs-fixer fix --dry-run --diff --verbose
+        env:
+          PHP_CS_FIXER_IGNORE_ENV: 1
+
+      - name: Préchauffer le cache Symfony
+        # PHPStan a besoin du conteneur compilé pour connaître les types
+        # réellement injectés par Symfony.
+        run: php bin/console cache:warmup --env=dev
+        env:
+          APP_ENV: dev
+          APP_DEBUG: 1
+          DATABASE_URL: "mysql://root:root@127.0.0.1:3306/cesizen?serverVersion=8.0&charset=utf8mb4"
+
+      - name: Analyse statique
+        run: vendor/bin/phpstan analyse --no-progress --error-format=github --memory-limit=1G
+
+      - name: Auditer les dépendances
+        run: composer audit --locked
+
+  # ---------------------------------------------------------------------------
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: cesizen_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      DATABASE_URL: "mysql://root:root@127.0.0.1:3306/cesizen_test?serverVersion=8.0&charset=utf8mb4"
+      APP_ENV: test
+      APP_DEBUG: 0
+      JWT_SECRET_KEY: '%kernel.project_dir%/config/jwt/private.pem'
+      JWT_PUBLIC_KEY: '%kernel.project_dir%/config/jwt/public.pem'
+      JWT_PASSPHRASE: passphrase_de_test_ci
+
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: mbstring, intl, pdo_mysql, zip, ctype, iconv
+          coverage: none
+          tools: composer:v2
+          ini-values: memory_limit=1G
+
+      - name: Mettre en cache les dépendances
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ env.PHP_VERSION }}-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-${{ env.PHP_VERSION }}-
+
+      - name: Installer les dépendances
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Générer la paire de clés JWT
+        run: php bin/console lexik:jwt:generate-keypair --skip-if-exists --no-interaction
+
+      - name: Attendre que MySQL soit prêt
+        run: |
+          for i in $(seq 1 30); do
+            if mysqladmin ping -h 127.0.0.1 -P 3306 -uroot -proot --silent; then
+              echo "MySQL est prêt."
+              exit 0
+            fi
+            echo "Tentative $i/30..."
+            sleep 2
+          done
+          echo "::error::MySQL n'a pas démarré dans le temps imparti."
+          exit 1
+
+      - name: Appliquer les migrations
+        run: php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration
+
+      - name: Exécuter PHPUnit
+        run: vendor/bin/phpunit --testdox
+
+  # ---------------------------------------------------------------------------
+  docker:
+    name: Build de l'image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Préparer Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Construire l'image de production
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: back-cesizen:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Vérifier que l'image démarre
+        run: |
+          docker run --rm back-cesizen:ci php -v
+          docker image inspect back-cesizen:ci --format 'Taille de l image : {{.Size}} octets'
