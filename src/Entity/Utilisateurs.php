@@ -73,6 +73,7 @@ class Utilisateurs implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(length: 255, nullable: true)]
     #[Groups(['utilisateurs:read', 'utilisateurs:write'])]
+    
     private ?string $photoProfil = null;
 
     #[ORM\Column(nullable: true)]
