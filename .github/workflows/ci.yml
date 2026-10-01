@@ -31,7 +31,7 @@ jobs:
 
     steps:
       - name: Récupérer le code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Installer PHP
         uses: shivammathur/setup-php@v2
@@ -46,7 +46,7 @@ jobs:
         run: composer validate --strict
 
       - name: Mettre en cache les dépendances
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: vendor
           key: composer-${{ env.PHP_VERSION }}-${{ hashFiles('composer.lock') }}
@@ -120,7 +120,7 @@ jobs:
 
     steps:
       - name: Récupérer le code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Installer PHP
         uses: shivammathur/setup-php@v2
@@ -132,7 +132,7 @@ jobs:
           ini-values: memory_limit=1G
 
       - name: Mettre en cache les dépendances
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: vendor
           key: composer-${{ env.PHP_VERSION }}-${{ hashFiles('composer.lock') }}
@@ -170,13 +170,13 @@ jobs:
 
     steps:
       - name: Récupérer le code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Préparer Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Construire l'image de production
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: false
